@@ -40,12 +40,26 @@ cd mp3-ghost
 bash setup.sh
 ```
 
+**To open it again later (no need to run setup.sh again):**
+
+```bash
+cd mp3-ghost
+python3 mp3_ghost.py
+```
+
 ### On Linux
 
 ```bash
 git clone https://github.com/crypt-1sx/mp3-ghost.git
 cd mp3-ghost
 bash setup.sh
+```
+
+**To open it again later (no need to run setup.sh again):**
+
+```bash
+cd mp3-ghost
+python3 mp3_ghost.py
 ```
 
 The installer auto-detects your system, installs everything, and launches the script.
