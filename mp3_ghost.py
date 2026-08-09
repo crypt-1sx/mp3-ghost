@@ -19,7 +19,7 @@ BANNER = GREEN + r"""
   / /|_/ / /_/ //_ <   / / __/ /_/ / / / /\__ \ / /   
  / /  / / ____/__/ /  / /_/ / __  / /_/ /___/ // /    
 /_/  /_/_/   /____/   \____/_/ /_/\____//____//_/     
-""" + RESET + RED + "by islem" + RESET + "\n" + r"""
+""" + RESET + RED + "by crypt-1sx" + RESET + "\n" + r"""
   [ YouTube -> MP3  |  Termux Edition  ]
 """
 
