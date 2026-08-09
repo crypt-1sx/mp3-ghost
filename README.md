@@ -11,6 +11,8 @@
 ```
 *by islem*
 
+![Mp3 GHOST in Termux](screenshot.jpg)
+
 ---
 
 ## Features
@@ -47,6 +49,32 @@ bash setup.sh
 ```
 
 The installer auto-detects your system, installs everything, and launches the script.
+
+## Manual install (step by step)
+
+Prefer to do it yourself? Install the requirements, then run the script.
+
+### On Termux (Android)
+
+```bash
+pkg update
+pkg install -y python ffmpeg git
+pip install yt-dlp
+git clone https://github.com/crypt-1sx/mp3-ghost.git
+cd mp3-ghost
+python mp3_ghost.py
+```
+
+### On Linux
+
+```bash
+sudo apt update
+sudo apt install -y python3 python3-pip ffmpeg
+pip install yt-dlp
+git clone https://github.com/crypt-1sx/mp3-ghost.git
+cd mp3-ghost
+python3 mp3_ghost.py
+```
 
 ## Usage
 
