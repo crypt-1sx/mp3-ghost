@@ -21,7 +21,7 @@ BANNER = GREEN + r"""
  / /  / / ____/__/ /  / /_/ / __  / /_/ /___/ // /    
 /_/  /_/_/   /____/   \____/_/ /_/\____//____//_/     
 """ + RESET + RED + "by crypt-1sx" + RESET + "\n" + r"""
-  [ YouTube -> MP3  |  Termux Edition  ]
+  [ YouTube -> MP3 MP4  |  Termux Edition  ]
 """
 
 OUT_DIR = "/storage/emulated/0/Download/Seal/Audio"
