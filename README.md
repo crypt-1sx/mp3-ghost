@@ -20,7 +20,6 @@
 - Clean interactive menu (↑/↓ to navigate, Enter to select)
 - Paste a YouTube URL and download it as **MP3, MP4, M4A, OPUS or FLAC**
 - **Choose your format** (MP3 quality levels, MP4 resolutions, lossless audio) before downloading
-- **Live download progress bar**
 - Embedded thumbnail & metadata
 - **Changeable download directory** from the menu
 - No manual dependency setup — **one command** installs and runs everything
