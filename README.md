@@ -18,8 +18,8 @@
 ## Features
 
 - Clean interactive menu (↑/↓ to navigate, Enter to select)
-- Paste a YouTube URL and download it as **high-quality MP3**
-- **Choose your format** (Best VBR / 320 / 192 / 128 kbps) before downloading
+- Paste a YouTube URL and download it as **MP3, MP4, M4A, OPUS or FLAC**
+- **Choose your format** (MP3 quality levels, MP4 resolutions, lossless audio) before downloading
 - **Live download progress bar**
 - Embedded thumbnail & metadata
 - **Changeable download directory** from the menu
@@ -97,7 +97,7 @@ python3 mp3_ghost.py
 1. Pick **Paste YouTube URL** and press Enter
 2. Type/paste the video URL and press Enter
 3. Choose a download format from the list and press Enter
-4. Watch the progress bar — the MP3 is saved to the download directory
+4. Watch the progress bar — the file is saved to the download directory
 
 > Default download directory: `/storage/emulated/0/Download/Seal/Audio`
 >
@@ -105,11 +105,11 @@ python3 mp3_ghost.py
 
 ### Options
 
-| Option              | What it does                                   |
-| ------------------- | ---------------------------------------------- |
-| Paste YouTube URL   | Download a video as MP3                        |
-| Download Directory  | Show / change where songs are saved            |
-| Quit                | Exit the script                                |
+| Option              | What it does                                           |
+| ------------------- | ------------------------------------------------------ |
+| Paste YouTube URL   | Download a video as MP3 / MP4 / M4A / OPUS / FLAC      |
+| Download Directory  | Show / change where songs are saved                    |
+| Quit                | Exit the script                                        |
 
 ## Direct URL (fast)
 

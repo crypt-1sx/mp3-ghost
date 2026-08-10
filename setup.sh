@@ -34,8 +34,8 @@ install_termux() {
     pkg update -y
     echo "[+] Installing python, ffmpeg..."
     pkg install -y python ffmpeg
-    echo "[+] Installing yt-dlp..."
-    pip install -U yt-dlp
+    echo "[+] Installing yt-dlp + mutagen..."
+    pip install -U yt-dlp mutagen
 }
 
 install_linux() {
@@ -51,8 +51,8 @@ install_linux() {
         echo -e "${RED}[!] Unsupported package manager. Install python3, pip and ffmpeg manually.${RESET}"
         exit 1
     fi
-    echo "[+] Installing yt-dlp..."
-    pip install -U --break-system-packages yt-dlp || pip install -U yt-dlp
+    echo "[+] Installing yt-dlp + mutagen..."
+    pip install -U --break-system-packages yt-dlp mutagen || pip install -U yt-dlp mutagen
 }
 
 case "$(detect)" in

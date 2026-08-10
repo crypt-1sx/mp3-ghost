@@ -35,6 +35,10 @@ def check_requirements():
         import yt_dlp
     except ImportError:
         missing.append("yt-dlp (pip install yt-dlp)")
+    try:
+        import mutagen
+    except ImportError:
+        missing.append("mutagen (pip install mutagen)")
     if missing:
         print("[!] Missing dependencies: " + ", ".join(missing))
         print("    Run: pkg install ffmpeg  &&  pip install yt-dlp")
@@ -58,42 +62,61 @@ def progress_hook(d):
 
 
 def choose_format():
-    options = [
-        ("Best quality (VBR)", 0),
-        ("High quality (320 kbps)", 320),
-        ("Medium quality (192 kbps)", 192),
-        ("Low quality (128 kbps)", 128),
+    formats = [
+        ("MP3 - Best quality (VBR)", {"codec": "mp3", "quality": 0}),
+        ("MP3 - 320 kbps", {"codec": "mp3", "quality": 320}),
+        ("MP3 - 192 kbps", {"codec": "mp3", "quality": 192}),
+        ("MP3 - 128 kbps", {"codec": "mp3", "quality": 128}),
+        ("MP4 - Best quality", {"codec": "mp4", "quality": "best"}),
+        ("MP4 - 720p", {"codec": "mp4", "quality": "720p"}),
+        ("MP4 - 480p", {"codec": "mp4", "quality": "480p"}),
+        ("M4A - Audio", {"codec": "m4a", "quality": 0}),
+        ("OPUS - Audio", {"codec": "opus", "quality": 0}),
+        ("FLAC - Lossless", {"codec": "flac", "quality": 0}),
     ]
     print("\n" + RED + "  Available download formats" + RESET)
-    for i, (label, _) in enumerate(options, 1):
+    for i, (label, _) in enumerate(formats, 1):
         print(f"    {i}) {label}")
     while True:
-        choice = input("  Choose format (1-4): ").strip()
-        if choice in ("1", "2", "3", "4"):
-            return options[int(choice) - 1][1]
-        print("    Invalid choice. Pick a number from 1 to 4.")
+        choice = input(f"  Choose format (1-{len(formats)}): ").strip()
+        if choice.isdigit() and 1 <= int(choice) <= len(formats):
+            return formats[int(choice) - 1][1]
+        print("    Invalid choice. Try again.")
 
 
-def download_mp3(url, out_dir, quality=0):
+def download_media(url, out_dir, fmt):
     os.makedirs(out_dir, exist_ok=True)
+    codec = fmt["codec"]
+    quality = fmt["quality"]
+
     opts = {
-        "format": "bestaudio/best",
         "outtmpl": os.path.join(out_dir, "%(title)s.%(ext)s"),
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "mp3",
-                "preferredquality": quality,
-            },
-            {"key": "EmbedThumbnail"},
-        ],
-        "writethumbnail": True,
         "quiet": True,
         "no_warnings": True,
         "noprogress": True,
         "noplaylist": True,
         "progress_hooks": [progress_hook],
     }
+
+    if codec == "mp4":
+        if quality == "best":
+            opts["format"] = "bestvideo+bestaudio/best"
+        else:
+            h = quality.replace("p", "")
+            opts["format"] = f"bv*[height<={h}]+ba/b[height<={h}]"
+        opts["merge_output_format"] = "mp4"
+    else:
+        opts["format"] = "bestaudio/best"
+        opts["writethumbnail"] = True
+        opts["postprocessors"] = [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": codec,
+                "preferredquality": quality,
+            },
+            {"key": "EmbedThumbnail"},
+        ]
+
     print("\n[+] Fetching video info...")
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
@@ -201,7 +224,7 @@ def main():
     if len(sys.argv) > 1:
         print(BANNER)
         url = sys.argv[1]
-        quality = 0
+        fmt = {"codec": "mp3", "quality": 0}
     else:
         choice = run_menu()
         if choice == 2:
@@ -214,9 +237,9 @@ def main():
         if url.lower() in ("q", "quit", "exit"):
             print("\n[!] Exiting. Goodbye!")
             sys.exit(0)
-        quality = choose_format()
+        fmt = choose_format()
 
-    if not download_mp3(url, OUT_DIR, quality):
+    if not download_media(url, OUT_DIR, fmt):
         print("\n[!] Download failed.")
         sys.exit(1)
 
