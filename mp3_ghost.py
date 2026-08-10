@@ -5,9 +5,10 @@
 import os
 import sys
 import shutil
-import subprocess
 import termios
 import tty
+
+import yt_dlp
 
 GREEN = "\033[92m"
 RED = "\033[31m"
@@ -30,7 +31,9 @@ def check_requirements():
     missing = []
     if shutil.which("ffmpeg") is None:
         missing.append("ffmpeg")
-    if shutil.which("yt-dlp") is None:
+    try:
+        import yt_dlp
+    except ImportError:
         missing.append("yt-dlp (pip install yt-dlp)")
     if missing:
         print("[!] Missing dependencies: " + ", ".join(missing))
@@ -39,22 +42,66 @@ def check_requirements():
     return True
 
 
-def download_mp3(url, out_dir):
-    os.makedirs(out_dir, exist_ok=True)
-    cmd = [
-        "yt-dlp",
-        "-x",
-        "--audio-format", "mp3",
-        "--audio-quality", "0",
-        "--embed-thumbnail",
-        "--embed-metadata",
-        "-o", os.path.join(out_dir, "%(title)s.%(ext)s"),
-        "--no-playlist",
-        url,
+def progress_hook(d):
+    if d.get("status") == "downloading":
+        total = d.get("total_bytes") or d.get("total_bytes_estimate") or 0
+        done = d.get("downloaded_bytes", 0)
+        pct = (done / total * 100) if total else 0
+        bar_len = 30
+        filled = int(bar_len * pct / 100)
+        bar = "█" * filled + "░" * (bar_len - filled)
+        sys.stdout.write(f"\r  {bar} {pct:5.1f}%")
+        sys.stdout.flush()
+    elif d.get("status") == "finished":
+        sys.stdout.write("\r" + " " * 44 + "\r")
+        sys.stdout.flush()
+
+
+def choose_format():
+    options = [
+        ("Best quality (VBR)", 0),
+        ("High quality (320 kbps)", 320),
+        ("Medium quality (192 kbps)", 192),
+        ("Low quality (128 kbps)", 128),
     ]
-    print("\n[+] Downloading...")
-    result = subprocess.run(cmd)
-    return result.returncode == 0
+    print("\n" + RED + "  Available download formats" + RESET)
+    for i, (label, _) in enumerate(options, 1):
+        print(f"    {i}) {label}")
+    while True:
+        choice = input("  Choose format (1-4): ").strip()
+        if choice in ("1", "2", "3", "4"):
+            return options[int(choice) - 1][1]
+        print("    Invalid choice. Pick a number from 1 to 4.")
+
+
+def download_mp3(url, out_dir, quality=0):
+    os.makedirs(out_dir, exist_ok=True)
+    opts = {
+        "format": "bestaudio/best",
+        "outtmpl": os.path.join(out_dir, "%(title)s.%(ext)s"),
+        "postprocessors": [
+            {
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": "mp3",
+                "preferredquality": quality,
+            },
+            {"key": "EmbedThumbnail"},
+        ],
+        "writethumbnail": True,
+        "quiet": True,
+        "no_warnings": True,
+        "noprogress": True,
+        "noplaylist": True,
+        "progress_hooks": [progress_hook],
+    }
+    print("\n[+] Fetching video info...")
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            ydl.download([url])
+        return True
+    except Exception as e:
+        print(f"\n[!] Error: {e}")
+        return False
 
 
 def read_key():
@@ -154,27 +201,27 @@ def main():
     if len(sys.argv) > 1:
         print(BANNER)
         url = sys.argv[1]
+        quality = 0
     else:
         choice = run_menu()
         if choice == 2:
             print("\n[!] Goodbye.")
             sys.exit(0)
         url = input(RED + "Paste YouTube URL: " + RESET).strip()
+        if not url:
+            print("[!] No URL provided.")
+            sys.exit(1)
+        if url.lower() in ("q", "quit", "exit"):
+            print("\n[!] Exiting. Goodbye!")
+            sys.exit(0)
+        quality = choose_format()
 
-    if url.lower() in ("q", "quit", "exit"):
-        print("\n[!] Exiting. Goodbye!")
-        sys.exit(0)
-
-    if not url:
-        print("[!] No URL provided.")
-        sys.exit(1)
-
-    if not download_mp3(url, OUT_DIR):
+    if not download_mp3(url, OUT_DIR, quality):
         print("\n[!] Download failed.")
         sys.exit(1)
 
     print(f"\n[+] Saved to: {OUT_DIR}")
-    print("[+] Done. Listen to your ghostly tune!")
+    print("[+] Enjoy your ghost tune!")
 
 
 if __name__ == "__main__":
