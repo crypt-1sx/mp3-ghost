@@ -32,23 +32,23 @@ detect() {
 install_termux() {
     echo "[+] Updating packages..."
     pkg update -y
-    echo "[+] Installing python, ffmpeg..."
-    pkg install -y python ffmpeg
+    echo "[+] Installing python, ffmpeg, chafa..."
+    pkg install -y python ffmpeg chafa
     echo "[+] Installing yt-dlp + mutagen..."
     pip install -U yt-dlp mutagen
 }
 
 install_linux() {
-    echo "[+] Installing python3, ffmpeg..."
+    echo "[+] Installing python3, ffmpeg, chafa..."
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt-get update
-        sudo apt-get install -y python3 python3-pip ffmpeg
+        sudo apt-get install -y python3 python3-pip ffmpeg chafa
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y python3 python3-pip ffmpeg
+        sudo dnf install -y python3 python3-pip ffmpeg chafa
     elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -Syu --noconfirm python python-pip ffmpeg
+        sudo pacman -Syu --noconfirm python python-pip ffmpeg chafa
     else
-        echo -e "${RED}[!] Unsupported package manager. Install python3, pip and ffmpeg manually.${RESET}"
+        echo -e "${RED}[!] Unsupported package manager. Install python3, pip, ffmpeg and chafa manually.${RESET}"
         exit 1
     fi
     echo "[+] Installing yt-dlp + mutagen..."

@@ -23,12 +23,13 @@
 - **Approximate file size shown next to every format** before you download
 - **Live download progress bar**
 - Embedded thumbnail & metadata
+- **Cover art shown in the terminal after download** with the song name, format and file size
 - **Changeable download directory** from the menu
 - No manual dependency setup — **one command** installs and runs everything
 
 ## Requirements
 
-Nothing to install manually. The installer handles Python, `yt-dlp` and `ffmpeg` for you.
+Nothing to install manually. The installer handles Python, `yt-dlp`, `ffmpeg` and `chafa` (for the cover art preview) for you.
 
 ## Install & Run
 

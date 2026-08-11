@@ -3,16 +3,25 @@
 # Requirements: pip install yt-dlp ffmpeg-python   (pkg install ffmpeg)
 
 import os
+import re
 import sys
 import shutil
+import subprocess
+import tempfile
 import termios
 import tty
+import urllib.request
 
 import yt_dlp
 
 GREEN = "\033[92m"
 RED = "\033[31m"
 RESET = "\033[0m"
+
+ANSI_RE = re.compile(r"\x1b\[[0-9;]*m")
+
+COVER_WIDTH = 24
+COVER_HEIGHT = 16
 
 BANNER = GREEN + r"""
     __  _______ _____    ________  ______  ___________
@@ -69,6 +78,56 @@ def human_size(n):
         if n < 1024 or unit == "GB":
             return f"{n:.1f} {unit}"
         n /= 1024
+
+
+def visible_len(s):
+    return len(ANSI_RE.sub("", s))
+
+
+def newest_file(out_dir):
+    files = [os.path.join(out_dir, f) for f in os.listdir(out_dir)
+             if os.path.isfile(os.path.join(out_dir, f))]
+    return max(files, key=os.path.getmtime) if files else None
+
+
+def show_cover_art(info, out_dir, fmt):
+    if shutil.which("chafa") is None:
+        print("\n  [i] Install 'chafa' (pkg install chafa) to show the cover art here.")
+        return
+    thumb = (info or {}).get("thumbnail")
+    if not thumb:
+        return
+    tmp = os.path.join(tempfile.gettempdir(), "mp3ghost_cover.jpg")
+    try:
+        urllib.request.urlretrieve(thumb, tmp)
+        output = subprocess.check_output(
+            ["chafa", "--format=symbols", "--colors=full",
+             f"--size={COVER_WIDTH}x{COVER_HEIGHT}", tmp],
+            stderr=subprocess.DEVNULL)
+    except Exception:
+        return
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+    lines = output.decode(errors="replace").rstrip("\n").split("\n")
+    while lines and not ANSI_RE.sub("", lines[-1]).strip():
+        lines.pop()
+    if not lines:
+        return
+    title = (info.get("title") or "Unknown").strip()
+    codec = fmt["codec"].upper()
+    final = newest_file(out_dir)
+    size = human_size(os.path.getsize(final)) if final else "?"
+    info_text = f"{title}   |   {codec}   |   {size}"
+
+    print()
+    for i, line in enumerate(lines):
+        pad = " " * max(0, COVER_WIDTH - visible_len(line))
+        suffix = ("  " + info_text) if i == 0 else ""
+        print(line + pad + suffix)
 
 
 def estimate_size(fmt, info):
@@ -217,11 +276,13 @@ def download_media(url, out_dir, fmt):
     print("\n[+] Downloading...")
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
-            ydl.download([url])
-        return True
+            result = ydl.extract_info(url, download=True)
+        if isinstance(result, list) and result:
+            result = result[0]
+        return True, result
     except Exception as e:
         print(f"\n[!] Error: {e}")
-        return False
+        return False, None
 
 
 def read_key():
@@ -322,11 +383,13 @@ def main():
         print(BANNER)
         url = sys.argv[1]
         fmt = {"codec": "mp3", "quality": 0}
-        if not download_media(url, OUT_DIR, fmt):
+        ok, dlinfo = download_media(url, OUT_DIR, fmt)
+        if not ok:
             print("\n[!] Download failed.")
             sys.exit(1)
         print(f"\n[+] Saved to: {OUT_DIR}")
         print("[+] Enjoy your ghost tune!")
+        show_cover_art(dlinfo, OUT_DIR, fmt)
         return
 
     while True:
@@ -354,11 +417,13 @@ def main():
                 break
             if nav is None:
                 continue
-            if not download_media(url, OUT_DIR, nav):
+            ok, dlinfo = download_media(url, OUT_DIR, nav)
+            if not ok:
                 print("\n[!] Download failed.")
             else:
                 print(f"\n[+] Saved to: {OUT_DIR}")
                 print("[+] Enjoy your ghost tune!")
+                show_cover_art(info or dlinfo, OUT_DIR, nav)
                 input("\n  Press Enter to return to the menu...")
             break
 
