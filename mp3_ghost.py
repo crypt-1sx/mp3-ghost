@@ -61,7 +61,93 @@ def progress_hook(d):
         sys.stdout.flush()
 
 
-def choose_format():
+def human_size(n):
+    if not n or n <= 0:
+        return "?"
+    n = float(n)
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{n:.1f} {unit}"
+        n /= 1024
+
+
+def estimate_size(fmt, info):
+    if not info:
+        return 0
+    dur = info.get("duration") or 0
+    fmts = info.get("formats") or []
+
+    def fsz(f):
+        return f.get("filesize") or f.get("filesize_approx") or 0
+
+    def best_audio():
+        best = None
+        for f in fmts:
+            if f.get("acodec") not in (None, "none"):
+                if best is None or (f.get("abr") or 0) > (best.get("abr") or 0):
+                    best = f
+        return best
+
+    def kbps_bytes(kbps):
+        return int(dur * kbps * 1000 / 8) if dur else 0
+
+    codec, q = fmt["codec"], fmt["quality"]
+
+    if codec == "mp3":
+        kbps = q if q else 192
+        a = best_audio()
+        if q == 0 and a:
+            kbps = a.get("abr") or a.get("tbr") or 192
+        return kbps_bytes(kbps)
+
+    if codec == "mp4":
+        cands = [f for f in fmts if f.get("height")]
+        if q == "best":
+            v = max(cands, key=lambda f: f["height"]) if cands else None
+        else:
+            h = int(q.replace("p", ""))
+            sub = [f for f in cands if f["height"] <= h]
+            v = max(sub, key=lambda f: f["height"]) if sub else None
+        a = best_audio()
+        v_sz, a_sz = fsz(v), fsz(a)
+        if v_sz or a_sz:
+            return (v_sz or 0) + (a_sz or 0)
+        vbr = (v.get("tbr") or 0) - (v.get("abr") or 0) if v else 0
+        return kbps_bytes(vbr + (a.get("tbr") or 0))
+
+    if codec in ("m4a", "opus"):
+        a = best_audio()
+        if fsz(a):
+            return fsz(a)
+        return kbps_bytes(a.get("tbr") or 0)
+
+    if codec == "flac":
+        a = best_audio()
+        abr = a.get("abr") or a.get("tbr") or 0
+        kbps = max(abr * 4, 900) if abr else 900
+        return kbps_bytes(kbps)
+
+    return 0
+
+
+def fetch_info(url):
+    opts = {
+        "quiet": True,
+        "no_warnings": True,
+        "noprogress": True,
+        "noplaylist": True,
+    }
+    try:
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=False)
+            if info and info.get("entries"):
+                info = info["entries"][0]
+            return info
+    except Exception:
+        return None
+
+
+def choose_format(info=None):
     formats = [
         ("MP3 - Best quality (VBR)", {"codec": "mp3", "quality": 0}),
         ("MP3 - 320 kbps", {"codec": "mp3", "quality": 320}),
@@ -75,8 +161,8 @@ def choose_format():
         ("FLAC - Lossless", {"codec": "flac", "quality": 0}),
     ]
     print("\n" + RED + "  Available download formats" + RESET)
-    for i, (label, _) in enumerate(formats, 1):
-        print(f"    {i}) {label}")
+    for i, (label, f) in enumerate(formats, 1):
+        print(f"    {i}) {label}   [~{human_size(estimate_size(f, info))}]")
     while True:
         choice = input(f"  Choose format (1-{len(formats)}): ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(formats):
@@ -117,7 +203,7 @@ def download_media(url, out_dir, fmt):
             {"key": "EmbedThumbnail"},
         ]
 
-    print("\n[+] Fetching video info...")
+    print("\n[+] Downloading...")
     try:
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
@@ -237,7 +323,9 @@ def main():
         if url.lower() in ("q", "quit", "exit"):
             print("\n[!] Exiting. Goodbye!")
             sys.exit(0)
-        fmt = choose_format()
+        print("\n[+] Fetching video info...")
+        info = fetch_info(url)
+        fmt = choose_format(info)
 
     if not download_media(url, OUT_DIR, fmt):
         print("\n[!] Download failed.")
