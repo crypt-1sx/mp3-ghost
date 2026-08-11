@@ -165,9 +165,8 @@ def choose_format(info=None):
     for i, (label, f) in enumerate(formats, 1):
         print(f"    {i}) {label}   [~{human_size(estimate_size(f, info))}]")
     print(f"    {total + 1}) Return to URL input")
-    print(f"    {total + 2}) Return to main menu")
     while True:
-        choice = input(f"  Choose format (1-{total + 2}): ").strip().lower()
+        choice = input(f"  Choose format (1-{total + 1}): ").strip().lower()
         if choice in ("m", "menu", "main"):
             return "menu"
         if choice in ("q", "quit", "exit"):
@@ -179,8 +178,6 @@ def choose_format(info=None):
                 return formats[n - 1][1]
             if n == total + 1:
                 return None
-            if n == total + 2:
-                return "menu"
         print("    Invalid choice. Try again.")
 
 
@@ -339,7 +336,7 @@ def main():
             sys.exit(0)
 
         while True:
-            url = input(RED + "Paste YouTube URL" + RESET + " (or 'menu' to go back): ").strip()
+            url = input(RED + "Paste YouTube URL" + RESET + " (type : 'menu' to go back): ").strip()
             if not url:
                 continue
             if url.lower() in ("menu", "main", "back"):
