@@ -359,6 +359,7 @@ def main():
             else:
                 print(f"\n[+] Saved to: {OUT_DIR}")
                 print("[+] Enjoy your ghost tune!")
+                input("\n  Press Enter to return to the menu...")
             break
 
 
