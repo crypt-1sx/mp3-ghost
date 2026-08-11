@@ -160,13 +160,27 @@ def choose_format(info=None):
         ("OPUS - Audio", {"codec": "opus", "quality": 0}),
         ("FLAC - Lossless", {"codec": "flac", "quality": 0}),
     ]
+    total = len(formats)
     print("\n" + RED + "  Available download formats" + RESET)
     for i, (label, f) in enumerate(formats, 1):
         print(f"    {i}) {label}   [~{human_size(estimate_size(f, info))}]")
+    print(f"    {total + 1}) Return to URL input")
+    print(f"    {total + 2}) Return to main menu")
     while True:
-        choice = input(f"  Choose format (1-{len(formats)}): ").strip()
-        if choice.isdigit() and 1 <= int(choice) <= len(formats):
-            return formats[int(choice) - 1][1]
+        choice = input(f"  Choose format (1-{total + 2}): ").strip().lower()
+        if choice in ("m", "menu", "main"):
+            return "menu"
+        if choice in ("q", "quit", "exit"):
+            print("\n[!] Goodbye.")
+            sys.exit(0)
+        if choice.isdigit():
+            n = int(choice)
+            if 1 <= n <= total:
+                return formats[n - 1][1]
+            if n == total + 1:
+                return None
+            if n == total + 2:
+                return "menu"
         print("    Invalid choice. Try again.")
 
 
@@ -311,28 +325,41 @@ def main():
         print(BANNER)
         url = sys.argv[1]
         fmt = {"codec": "mp3", "quality": 0}
-    else:
+        if not download_media(url, OUT_DIR, fmt):
+            print("\n[!] Download failed.")
+            sys.exit(1)
+        print(f"\n[+] Saved to: {OUT_DIR}")
+        print("[+] Enjoy your ghost tune!")
+        return
+
+    while True:
         choice = run_menu()
         if choice == 2:
             print("\n[!] Goodbye.")
             sys.exit(0)
-        url = input(RED + "Paste YouTube URL: " + RESET).strip()
-        if not url:
-            print("[!] No URL provided.")
-            sys.exit(1)
-        if url.lower() in ("q", "quit", "exit"):
-            print("\n[!] Exiting. Goodbye!")
-            sys.exit(0)
-        print("\n[+] Fetching video info...")
-        info = fetch_info(url)
-        fmt = choose_format(info)
 
-    if not download_media(url, OUT_DIR, fmt):
-        print("\n[!] Download failed.")
-        sys.exit(1)
-
-    print(f"\n[+] Saved to: {OUT_DIR}")
-    print("[+] Enjoy your ghost tune!")
+        while True:
+            url = input(RED + "Paste YouTube URL" + RESET + " (or 'menu' to go back): ").strip()
+            if not url:
+                continue
+            if url.lower() in ("menu", "main", "back"):
+                break
+            if url.lower() in ("q", "quit", "exit"):
+                print("\n[!] Exiting. Goodbye!")
+                sys.exit(0)
+            print("\n[+] Fetching video info...")
+            info = fetch_info(url)
+            nav = choose_format(info)
+            if nav == "menu":
+                break
+            if nav is None:
+                continue
+            if not download_media(url, OUT_DIR, nav):
+                print("\n[!] Download failed.")
+            else:
+                print(f"\n[+] Saved to: {OUT_DIR}")
+                print("[+] Enjoy your ghost tune!")
+            break
 
 
 if __name__ == "__main__":

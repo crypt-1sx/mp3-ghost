@@ -100,6 +100,8 @@ python3 mp3_ghost.py
 3. Choose a download format from the list and press Enter
 4. Watch the progress bar — the file is saved to the download directory
 
+> In the format list you can also pick **Return to URL input** (go back and paste a different link) or **Return to main menu**. Type `menu` instead of a URL to go back to the main menu.
+
 > Default download directory: `/storage/emulated/0/Download/Seal/Audio`
 >
 > Change it anytime from the menu → **Download Directory**.
