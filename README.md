@@ -102,7 +102,7 @@ python3 mp3_ghost.py
 
 > In the format list you can pick **Return to URL input** to go back and paste a different link. Type `menu` instead of a URL to go back to the main menu.
 
-> Default download directory: `/storage/emulated/0/Download/Seal/Audio`
+> Default download directory: `/storage/emulated/0/Download/MP3 GHOST` (a folder named **MP3 GHOST** created inside your Android Downloads folder — your music/video apps can find it easily)
 >
 > Change it anytime from the menu → **Download Directory**.
 

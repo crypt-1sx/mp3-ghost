@@ -24,7 +24,7 @@ BANNER = GREEN + r"""
   [ YouTube -> MP3 MP4  |  Termux Edition  ]
 """
 
-OUT_DIR = "/storage/emulated/0/Download/Seal/Audio"
+OUT_DIR = "/storage/emulated/0/Download/MP3 GHOST"
 
 
 def check_requirements():
