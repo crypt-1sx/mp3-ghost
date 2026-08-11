@@ -346,6 +346,9 @@ def main():
                 sys.exit(0)
             print("\n[+] Fetching video info...")
             info = fetch_info(url)
+            if info is None:
+                print(RED + "  [!] Error: not a valid URL. Try again." + RESET)
+                continue
             nav = choose_format(info)
             if nav == "menu":
                 break
